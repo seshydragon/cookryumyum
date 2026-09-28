@@ -38,7 +38,7 @@ export const Route = createFileRoute('/recipes/$slug')({
     }) : null)
     if (!recipe) throw notFound()
 
-    const [session, stats] = await Promise.all([
+    const [session, stats, favs] = await Promise.all([
       sessionPromise,
       getStats().catch(() => ({ stats: null, ratings: {} })),
       getFavorites().catch(() => ({ favorites: [] })),
