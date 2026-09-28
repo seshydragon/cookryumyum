@@ -250,12 +250,12 @@ export async function getProfile(userId: number) {
     highProteinCooks: logs.filter((l) => l.protein >= 25).length,
     badges: owned.map((b) => ({ slug: b.slug, earnedAt: b.earnedAt.toISOString() })),
     ratings: Object.fromEntries(ratings.map((r) => [r.recipeSlug, r.stars])),
-    recent: logs.slice(0, 12).map((l) => ({
+    recent: await Promise.all(logs.slice(0, 12).map(async (l) => ({
       slug: l.recipeSlug,
       title: (await getShelfRecipe(l.recipeSlug))?.title ?? l.recipeSlug,
       cuisine: l.cuisine,
       cookedOn: l.cookedOn,
-    })),
+    }))),
   }
 }
 
