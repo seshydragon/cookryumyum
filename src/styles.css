@@ -1,0 +1,265 @@
+@import 'tailwindcss' source("../");
+
+/* Fraunces for anything that reads like a cookbook heading; Karla for the
+   running text and the interface itself. */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=Karla:ital,wght@0,300..800;1,300..800&display=swap');
+
+@theme {
+  --color-paper: #faf5ec;
+  --color-paper-2: #f1e8d9;
+  --color-paper-3: #e6d9c4;
+  --color-ink: #231d18;
+  --color-ink-2: #3d332c;
+  --color-ink-soft: #6b5c50;
+  --color-ink-faint: #9b8a7b;
+  --color-ember: #bf5227;
+  --color-ember-soft: #d97b4f;
+  --color-olive: #56603f;
+  --color-gold: #b8891f;
+  --color-plum: #6d3b4a;
+
+  --font-display: 'Fraunces', 'Georgia', serif;
+  --font-body: 'Karla', ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    /* A faint paper tooth so large flat areas are not dead flat. */
+    background-image:
+      radial-gradient(at 12% 4%, rgba(191, 82, 39, 0.05) 0px, transparent 55%),
+      radial-gradient(at 88% 0%, rgba(86, 96, 63, 0.05) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-variation-settings: 'SOFT' 20, 'WONK' 1;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ember);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: var(--color-ember);
+    color: var(--color-paper);
+  }
+}
+
+@layer components {
+  /* A small letterspaced label — used for section eyebrows and metadata. */
+  .eyebrow {
+    font-family: var(--font-body);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .rule {
+    border: 0;
+    border-top: 1px solid var(--color-paper-3);
+  }
+
+  /* Cards sit on the paper with a printed edge rather than a soft shadow. */
+  .card {
+    background: color-mix(in oklab, var(--color-paper) 92%, white);
+    border: 1px solid var(--color-paper-3);
+    border-radius: 2px;
+    transition:
+      transform 220ms cubic-bezier(0.2, 0.7, 0.3, 1),
+      box-shadow 220ms ease,
+      border-color 220ms ease;
+  }
+
+  .card-lift:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in oklab, var(--color-ember) 35%, var(--color-paper-3));
+    box-shadow: -6px 8px 0 -2px color-mix(in oklab, var(--color-ember) 18%, transparent);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 0.9375rem;
+    letter-spacing: 0.01em;
+    padding: 0.7rem 1.25rem;
+    border-radius: 2px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition:
+      transform 120ms ease,
+      background-color 160ms ease,
+      color 160ms ease,
+      border-color 160ms ease;
+  }
+
+  .btn:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background: var(--color-ember);
+    color: var(--color-paper);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: color-mix(in oklab, var(--color-ember) 85%, var(--color-ink));
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-ink);
+    border-color: var(--color-ink-faint);
+  }
+
+  .btn-ghost:hover:not(:disabled) {
+    border-color: var(--color-ink);
+    background: var(--color-paper-2);
+  }
+
+  .btn-ink {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+
+  .btn-ink:hover:not(:disabled) {
+    background: var(--color-ink-2);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+    background: var(--color-paper-2);
+    color: var(--color-ink-soft);
+    border: 1px solid var(--color-paper-3);
+  }
+
+  .field {
+    width: 100%;
+    background: color-mix(in oklab, var(--color-paper) 95%, white);
+    border: 1px solid var(--color-paper-3);
+    border-bottom-width: 2px;
+    border-radius: 2px;
+    padding: 0.65rem 0.75rem;
+    font-family: var(--font-body);
+    font-size: 0.9375rem;
+    color: var(--color-ink);
+    transition: border-color 160ms ease;
+  }
+
+  .field:focus {
+    border-color: var(--color-ember);
+    outline: none;
+  }
+
+  .field::placeholder {
+    color: var(--color-ink-faint);
+  }
+
+  /* Sidebar filter rows: the whole row is the target, not just the box. */
+  .filter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.3rem 0.4rem;
+    border-radius: 2px;
+    font-size: 0.875rem;
+    text-align: left;
+    color: var(--color-ink-2);
+    cursor: pointer;
+    transition:
+      background-color 140ms ease,
+      color 140ms ease;
+  }
+
+  .filter-row:hover {
+    background: var(--color-paper-2);
+  }
+
+  .filter-row[data-on='true'] {
+    background: color-mix(in oklab, var(--color-ember) 12%, transparent);
+    color: var(--color-ink);
+    font-weight: 700;
+  }
+}
+
+@layer utilities {
+  .stagger > * {
+    animation: rise 620ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  }
+
+  .stagger > *:nth-child(1) { animation-delay: 40ms; }
+  .stagger > *:nth-child(2) { animation-delay: 90ms; }
+  .stagger > *:nth-child(3) { animation-delay: 140ms; }
+  .stagger > *:nth-child(4) { animation-delay: 190ms; }
+  .stagger > *:nth-child(5) { animation-delay: 240ms; }
+  .stagger > *:nth-child(6) { animation-delay: 290ms; }
+  .stagger > *:nth-child(7) { animation-delay: 340ms; }
+  .stagger > *:nth-child(8) { animation-delay: 390ms; }
+  .stagger > *:nth-child(n + 9) { animation-delay: 430ms; }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes pop {
+    0% { transform: scale(0.85); opacity: 0; }
+    60% { transform: scale(1.04); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .pop {
+    animation: pop 420ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stagger > *,
+    .pop {
+      animation: none;
+    }
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
