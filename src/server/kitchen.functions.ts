@@ -23,7 +23,7 @@ import {
   voteForEntry,
 } from './kitchen.server'
 import { activeChallenge, previousChallenge } from '../data/challenges'
-import { addMealPlanItem, clearMealPlan, createUserRecipe, getMealPlan, getMyFavorites, getUserRecipe, listAllShelfRecipes, listMyRecipes, removeMealPlanItem, toggleFavorite } from './recipes.server'
+import { addMealPlanItem, clearMealPlan, createUserRecipe, getMealPlan, getMyFavorites, getShelfRecipe, getUserRecipe, listAllShelfRecipes, listMyRecipes, removeMealPlanItem, toggleFavorite } from './recipes.server'
 
 /* ---------------------------------------------------------------- session -- */
 
@@ -230,3 +230,7 @@ export const getSavedRecipe = createServerFn({ method: 'GET' })
 export const getShelfRecipes = createServerFn({ method: 'GET' }).handler(async () => {
   return { recipes: await listAllShelfRecipes() }
 })
+
+export const getUnifiedRecipe = createServerFn({ method: 'GET' })
+  .inputValidator(z.object({ slug: z.string().min(1).max(160) }))
+  .handler(async ({ data }) => getShelfRecipe(data.slug))
