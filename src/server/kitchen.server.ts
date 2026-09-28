@@ -22,6 +22,7 @@ import {
 import { getRecipe, recipes } from '../data/recipes'
 import { BADGES, XP, levelFor } from '../data/progress'
 import { activeChallenge, challengeWindow } from '../data/challenges'
+import { getShelfRecipe } from './recipes.server'
 
 const PHOTO_STORE = 'challenge-photos'
 const MAX_PHOTO_BYTES = 6 * 1024 * 1024
@@ -83,7 +84,7 @@ async function evaluateBadges(userId: number) {
     ).map((b) => b.slug),
   )
 
-  const cooked = logs.map((l) => getRecipe(l.recipeSlug)).filter((r) => r !== undefined)
+  const cooked = (await Promise.all(logs.map((l) => getShelfRecipe(l.recipeSlug)))).filter((r) => r !== null)
   const hasTime = (t: string) => cooked.some((r) => r.timeOfDay.includes(t as never))
   const hasTag = (...tags: Array<string>) =>
     cooked.some((r) => r.tags.some((tag) => tags.includes(tag)))
@@ -135,7 +136,7 @@ async function evaluateBadges(userId: number) {
 
 /** Records a cook, awards the XP it earns, and returns anything newly unlocked. */
 export async function logCook(userId: number, recipeSlug: string) {
-  const recipe = getRecipe(recipeSlug)
+  const recipe = await getShelfRecipe(recipeSlug)
   if (!recipe) return { error: 'That recipe is not on the shelf.' }
 
   const priorLogs = await db
@@ -192,7 +193,7 @@ export async function logCook(userId: number, recipeSlug: string) {
 }
 
 export async function rateRecipe(userId: number, recipeSlug: string, stars: number) {
-  if (!getRecipe(recipeSlug)) return { error: 'That recipe is not on the shelf.' }
+  if (!(await getShelfRecipe(recipeSlug))) return { error: 'That recipe is not on the shelf.' }
   const value = Math.max(1, Math.min(5, Math.round(stars)))
 
   const existing = await db
@@ -251,7 +252,7 @@ export async function getProfile(userId: number) {
     ratings: Object.fromEntries(ratings.map((r) => [r.recipeSlug, r.stars])),
     recent: logs.slice(0, 12).map((l) => ({
       slug: l.recipeSlug,
-      title: getRecipe(l.recipeSlug)?.title ?? l.recipeSlug,
+      title: (await getShelfRecipe(l.recipeSlug))?.title ?? l.recipeSlug,
       cuisine: l.cuisine,
       cookedOn: l.cookedOn,
     })),
