@@ -5,37 +5,15 @@ import { CookedItButton } from '../../components/CookedItButton'
 import { RecipeCard } from '../../components/RecipeCard'
 import {
   TIME_OF_DAY_LABELS,
-  getRecipe,
   recipes,
 } from '../../data/recipes'
 import { img } from '../../lib/img'
-import { favoriteRecipe, getFavorites, getSavedRecipe, getSession, getStats } from '../../server/kitchen.functions'
+import { favoriteRecipe, getFavorites, getSession, getStats, getUnifiedRecipe } from '../../server/kitchen.functions'
 
 export const Route = createFileRoute('/recipes/$slug')({
   loader: async ({ params }) => {
-    const staticRecipe = getRecipe(params.slug)
     const sessionPromise = getSession().catch(() => ({ user: null, profile: null }))
-    const recipe = staticRecipe ?? await getSavedRecipe({ data: { slug: params.slug } }).then((saved) => saved ? ({
-      slug: saved.slug,
-      title: saved.title,
-      blurb: saved.description,
-      cuisine: saved.cuisine,
-      timeOfDay: [saved.category as any],
-      minutes: saved.prepTime + saved.cookTime,
-      servings: saved.servings,
-      difficulty: saved.difficulty,
-      rating: 0,
-      ratingCount: 0,
-      note: 'A recipe from the Cook & Flame community.',
-      contributor: 'Community cook',
-      image: '/images/recipe-placeholder.jpg',
-      imageAlt: saved.title,
-      ingredients: saved.ingredients,
-      steps: saved.instructions,
-      tip: 'Adjust seasoning and cooking time to your ingredients and equipment.',
-      tags: [saved.category, saved.cuisine.toLowerCase()],
-      macros: { calories: 0, protein: 0, carbs: 0, fat: 0 },
-    }) : null)
+    const recipe = await getUnifiedRecipe({ data: { slug: params.slug } })
     if (!recipe) throw notFound()
 
     const [session, stats, favs] = await Promise.all([

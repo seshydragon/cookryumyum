@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { CalendarDays, Shuffle, Trash2 } from 'lucide-react'
-import { addToMealPlan, clearMyMealPlan, getMyMealPlan, getSession, removeFromMealPlan } from '../server/kitchen.functions'
-import { recipes } from '../data/recipes'
+import { addToMealPlan, clearMyMealPlan, getMyMealPlan, getSession, getShelfRecipes, removeFromMealPlan } from '../server/kitchen.functions'
 
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
 
@@ -15,10 +14,12 @@ function MealPlanner() {
   const [plan, setPlan] = useState<Plan>({})
   const [signedIn, setSignedIn] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [shelfRecipes, setShelfRecipes] = useState<Awaited<ReturnType<typeof getShelfRecipes>>['recipes']>([])
 
   async function load() {
-    const [session, result] = await Promise.all([getSession(), getMyMealPlan()])
+    const [session, result, shelf] = await Promise.all([getSession(), getMyMealPlan(), getShelfRecipes()])
     setSignedIn(Boolean(session.user))
+    setShelfRecipes(shelf.recipes)
     if (result.plan) setPlan(result.plan as Plan)
     setLoading(false)
   }
@@ -39,7 +40,8 @@ function MealPlanner() {
   }
 
   async function fillWeek() {
-    for (let i = 0; i < DAYS.length; i++) await addToMealPlan({ data: { day: DAYS[i], recipeSlug: recipes[i % recipes.length].slug } })
+    if (!shelfRecipes.length) return
+    for (let i = 0; i < DAYS.length; i++) await addToMealPlan({ data: { day: DAYS[i], recipeSlug: shelfRecipes[i % shelfRecipes.length].slug } })
     await load()
   }
 
@@ -71,7 +73,7 @@ function MealPlanner() {
             <h2 className="font-display text-xl font-bold">{day}</h2>
             <div className="mt-4 flex flex-col gap-3">
               {(plan[day] || []).map(item => {
-                const recipe = recipes.find(r => r.slug === item.recipeSlug)
+                const recipe = shelfRecipes.find(r => r.slug === item.recipeSlug)
                 if (!recipe) return <div key={item.id} className="border border-paper-3 p-3 text-sm text-ink-soft">Saved recipe: {item.recipeSlug}</div>
                 return <div key={item.id} className="border border-paper-3 p-3">
                   <div className="flex items-start justify-between gap-2">
@@ -83,7 +85,7 @@ function MealPlanner() {
               })}
               <select className="field text-sm" value="" onChange={e => e.target.value && add(day, e.target.value)}>
                 <option value="">+ Add a recipe</option>
-                {recipes.map(r => <option key={r.slug} value={r.slug}>{r.title}</option>)}
+                {shelfRecipes.map(r => <option key={r.slug} value={r.slug}>{r.title}</option>)}
               </select>
             </div>
           </section>
