@@ -7,6 +7,7 @@ import {
   date,
   uniqueIndex,
   index,
+  jsonb,
 } from 'drizzle-orm/pg-core'
 
 /**
@@ -147,4 +148,58 @@ export const recipeRatings = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (t) => [uniqueIndex('recipe_ratings_user_recipe_key').on(t.userId, t.recipeSlug)],
+)
+
+
+/** Recipes created by signed-in cooks. */
+export const userRecipes = pgTable(
+  'user_recipes',
+  {
+    id: serial().primaryKey(),
+    userId: integer('user_id').notNull().references(() => users.id),
+    slug: text().notNull(),
+    title: text().notNull(),
+    description: text().notNull().default(''),
+    category: text().notNull(),
+    cuisine: text().notNull(),
+    difficulty: text().notNull(),
+    servings: integer().notNull().default(2),
+    prepTime: integer('prep_time').notNull().default(0),
+    cookTime: integer('cook_time').notNull().default(0),
+    ingredients: jsonb().$type<string[]>().notNull().default([]),
+    instructions: jsonb().$type<string[]>().notNull().default([]),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('user_recipes_slug_key').on(t.slug),
+    index('user_recipes_user_id_idx').on(t.userId),
+  ],
+)
+
+/** Recipes a cook has saved. */
+export const recipeFavorites = pgTable(
+  'recipe_favorites',
+  {
+    id: serial().primaryKey(),
+    userId: integer('user_id').notNull().references(() => users.id),
+    recipeSlug: text('recipe_slug').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex('recipe_favorites_user_recipe_key').on(t.userId, t.recipeSlug)],
+)
+
+/** One persisted weekly meal-plan row per recipe placement. */
+export const mealPlanItems = pgTable(
+  'meal_plan_items',
+  {
+    id: serial().primaryKey(),
+    userId: integer('user_id').notNull().references(() => users.id),
+    day: text().notNull(),
+    position: integer().notNull().default(0),
+    recipeSlug: text('recipe_slug').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => [
+    index('meal_plan_items_user_day_idx').on(t.userId, t.day),
+  ],
 )
