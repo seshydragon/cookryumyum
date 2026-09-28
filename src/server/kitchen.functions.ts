@@ -23,7 +23,7 @@ import {
   voteForEntry,
 } from './kitchen.server'
 import { activeChallenge, previousChallenge } from '../data/challenges'
-import { addMealPlanItem, clearMealPlan, createUserRecipe, getMealPlan, getMyFavorites, listMyRecipes, removeMealPlanItem, toggleFavorite } from './recipes.server'
+import { addMealPlanItem, clearMealPlan, createUserRecipe, getMealPlan, getMyFavorites, getUserRecipe, listMyRecipes, removeMealPlanItem, toggleFavorite } from './recipes.server'
 
 /* ---------------------------------------------------------------- session -- */
 
@@ -220,3 +220,8 @@ export const clearMyMealPlan = createServerFn({ method: 'POST' }).handler(async 
   if (!user) return { error: 'Sign in to clear your meal plan.' }
   return clearMealPlan(user.id)
 })
+
+
+export const getSavedRecipe = createServerFn({ method: 'GET' })
+  .inputValidator(z.object({ slug: z.string().min(1).max(160) }))
+  .handler(async ({ data }) => getUserRecipe(data.slug))
