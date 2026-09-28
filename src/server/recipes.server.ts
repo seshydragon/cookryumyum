@@ -42,6 +42,24 @@ export async function createUserRecipe(userId: number, input: {
   return { slug: recipe.slug }
 }
 
+export async function getUserRecipe(slug: string) {
+  const [recipe] = await db.select({
+    slug: userRecipes.slug,
+    title: userRecipes.title,
+    description: userRecipes.description,
+    category: userRecipes.category,
+    cuisine: userRecipes.cuisine,
+    difficulty: userRecipes.difficulty,
+    servings: userRecipes.servings,
+    prepTime: userRecipes.prepTime,
+    cookTime: userRecipes.cookTime,
+    ingredients: userRecipes.ingredients,
+    instructions: userRecipes.instructions,
+    userId: userRecipes.userId,
+  }).from(userRecipes).where(eq(userRecipes.slug, slug))
+  return recipe ?? null
+}
+
 export async function listMyRecipes(userId: number) {
   return db.select({
     slug: userRecipes.slug,
