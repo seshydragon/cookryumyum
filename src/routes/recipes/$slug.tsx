@@ -8,7 +8,7 @@ import {
   recipes,
 } from '../../data/recipes'
 import { img } from '../../lib/img'
-import { favoriteRecipe, getSavedRecipe, getSession, getStats } from '../../server/kitchen.functions'
+import { getSavedRecipe, getSession, getStats } from '../../server/kitchen.functions'
 
 export const Route = createFileRoute('/recipes/$slug')({
   loader: async ({ params }) => {
@@ -19,7 +19,7 @@ export const Route = createFileRoute('/recipes/$slug')({
       title: saved.title,
       blurb: saved.description,
       cuisine: saved.cuisine,
-      timeOfDay: [saved.category],
+      timeOfDay: [saved.category as any],
       minutes: saved.prepTime + saved.cookTime,
       servings: saved.servings,
       difficulty: saved.difficulty,
