@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { CalendarDays, Shuffle, Trash2 } from 'lucide-react'
 import { addToMealPlan, clearMyMealPlan, getMyMealPlan, getSession, getShelfRecipes, removeFromMealPlan } from '../server/kitchen.functions'
-import { useMemo } from 'react'
 
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
 
