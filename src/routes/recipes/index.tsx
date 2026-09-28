@@ -6,7 +6,7 @@ import { ShelfSidebar } from '../../components/ShelfSidebar'
 import { CUISINES, TIMES_OF_DAY, recipes } from '../../data/recipes'
 import type { Cuisine, TimeOfDay } from '../../data/recipes'
 import { SORTS, applyFilters, type ShelfFilters, type SortKey } from '../../lib/shelf'
-import { getStats } from '../../server/kitchen.functions'
+import { getShelfRecipes, getStats } from '../../server/kitchen.functions'
 
 const asArray = (value: unknown): Array<string> => {
   if (Array.isArray(value)) return value.map(String)
@@ -35,10 +35,10 @@ export const Route = createFileRoute('/recipes/')({
   loaderDeps: () => ({}),
   loader: async () => {
     try {
-      const { ratings } = await getStats()
-      return { ratings }
+      const [{ ratings }, { recipes: shelfRecipes }] = await Promise.all([getStats(), getShelfRecipes()])
+      return { ratings, recipes: shelfRecipes }
     } catch {
-      return { ratings: {} as Record<string, { avg: number; n: number }> }
+      return { ratings: {} as Record<string, { avg: number; n: number }>, recipes }
     }
   },
   component: Shelf,
@@ -46,11 +46,11 @@ export const Route = createFileRoute('/recipes/')({
 
 function Shelf() {
   const filters = Route.useSearch()
-  const { ratings } = Route.useLoaderData()
+  const { ratings, recipes: shelfRecipes } = Route.useLoaderData()
   const navigate = useNavigate({ from: Route.fullPath })
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  const results = applyFilters(recipes, filters, ratings)
+  const results = applyFilters(shelfRecipes, filters, ratings)
 
   function onChange(next: Partial<ShelfFilters>) {
     navigate({
@@ -73,7 +73,7 @@ function Shelf() {
       <header className="mb-8 max-w-3xl">
         <p className="eyebrow">The shelf</p>
         <h1 className="mt-1 font-display text-4xl leading-[1.05] font-black sm:text-5xl">
-          {recipes.length} recipes, every one photographed and cooked
+          {shelfRecipes.length} recipes on the shelf
         </h1>
         <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-soft">
           Filter by what you feel like and when you are eating it. Breakfast at 8pm is a
@@ -134,7 +134,7 @@ function Shelf() {
             <div className="card flex flex-col items-center gap-3 px-6 py-20 text-center">
               <h2 className="font-display text-2xl font-bold">Nothing matches all of that</h2>
               <p className="max-w-sm text-sm text-ink-soft">
-                The shelf is 24 recipes deep, not 24,000. Drop a filter or two and something
+                The shelf is community-built, so there is always something new to try. Drop a filter or two and something
                 will turn up.
               </p>
               <button
