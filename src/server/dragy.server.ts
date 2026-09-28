@@ -1,11 +1,14 @@
-import { getShelfRecipe, listAllShelfRecipes } from './recipes.server'
+import { listAllShelfRecipes } from './recipes.server'
 
 type ChatMessage = { role: 'user' | 'assistant'; text: string }
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
+const NARA_MODEL = process.env.NARA_MODEL || 'auto/bynara'
 
 function getApiKey() {
-  return process.env.GEMINI_API_KEY || process.env.GOOGLE_GEMINI_API_KEY
+  // Keep compatibility with the exact Netlify variable name the app is
+  // currently configured with. The fallback also supports the conventional
+  // name if it is added later.
+  return process.env.Api_key || process.env.NARA_API_KEY
 }
 
 function buildContext(recipes: Awaited<ReturnType<typeof listAllShelfRecipes>>) {
@@ -24,7 +27,11 @@ function buildContext(recipes: Awaited<ReturnType<typeof listAllShelfRecipes>>) 
 
 export async function askDragy(messages: ChatMessage[]) {
   const apiKey = getApiKey()
-  if (!apiKey) return { error: 'Dragy AI is not configured yet. Add GEMINI_API_KEY to the server environment.' }
+  if (!apiKey) {
+    return {
+      error: 'Dragy AI is not configured yet. Add the Nara API key to the server environment.',
+    }
+  }
 
   const recipes = await listAllShelfRecipes()
   const recent = messages.slice(-12)
@@ -32,41 +39,53 @@ export async function askDragy(messages: ChatMessage[]) {
   const system = `You are Dragy, the friendly AI kitchen assistant inside Cook & Flame.
 Help with recipes, substitutions, cooking technique, meal planning, and choosing from the Cook & Flame shelf.
 Use the shelf context when recommending recipes. Never invent a recipe slug, nutrition value, rating, or ingredient that is not present in the context.
-If the user asks for nutrition, explain that listed recipe macros are estimates from the app and may not reflect actual portions.
+If the user asks about nutrition, explain that listed recipe macros are estimates from the app and may not reflect actual portions.
 Be concise and practical. You can recommend a recipe by exact title and slug when useful.
 
 Cook & Flame shelf context:
 ${JSON.stringify(buildContext(recipes))}`
 
-  const contents = recent.map((m) => ({
-    role: m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: m.text }],
-  }))
+  const naraMessages = [
+    { role: 'system', content: system },
+    ...recent.map((m) => ({
+      role: m.role,
+      content: m.text,
+    })),
+  ]
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(apiKey)}`,
-    {
+  try {
+    const response = await fetch('https://router.bynara.id/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: system }] },
-        contents,
-        generationConfig: { temperature: 0.7, maxOutputTokens: 700 },
+        model: NARA_MODEL,
+        messages: naraMessages,
+        temperature: 0.7,
+        max_tokens: 700,
       }),
-    },
-  )
+    })
 
-  if (!response.ok) {
-    const detail = await response.text()
-    console.error('Gemini Dragy error:', response.status, detail)
+    if (!response.ok) {
+      const detail = await response.text()
+      console.error('Nara Dragy error:', response.status, detail)
+      return { error: 'Dragy could not reach the AI service right now. Please try again.' }
+    }
+
+    const data = await response.json() as {
+      choices?: Array<{ message?: { content?: string } }>
+    }
+
+    const text = data.choices?.[0]?.message?.content?.trim()
+    if (!text) {
+      return { error: 'Dragy received an empty response. Try asking in a different way.' }
+    }
+
+    return { text }
+  } catch (error) {
+    console.error('Nara Dragy request failed:', error)
     return { error: 'Dragy could not reach the AI service right now. Please try again.' }
   }
-
-  const data = await response.json() as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
-  }
-  const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('').trim()
-  if (!text) return { error: 'Dragy received an empty response. Try asking in a different way.' }
-
-  return { text }
 }
