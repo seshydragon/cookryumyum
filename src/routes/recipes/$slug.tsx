@@ -1,4 +1,5 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
+import { useState } from 'react'
 import { ArrowLeft, Clock, Flame, Star, Users } from 'lucide-react'
 import { CookedItButton } from '../../components/CookedItButton'
 import { RecipeCard } from '../../components/RecipeCard'
@@ -8,16 +9,39 @@ import {
   recipes,
 } from '../../data/recipes'
 import { img } from '../../lib/img'
-import { getSession, getStats } from '../../server/kitchen.functions'
+import { favoriteRecipe, getFavorites, getSavedRecipe, getSession, getStats } from '../../server/kitchen.functions'
 
 export const Route = createFileRoute('/recipes/$slug')({
   loader: async ({ params }) => {
-    const recipe = getRecipe(params.slug)
+    const staticRecipe = getRecipe(params.slug)
+    const sessionPromise = getSession().catch(() => ({ user: null, profile: null }))
+    const recipe = staticRecipe ?? await getSavedRecipe({ data: { slug: params.slug } }).then((saved) => saved ? ({
+      slug: saved.slug,
+      title: saved.title,
+      blurb: saved.description,
+      cuisine: saved.cuisine,
+      timeOfDay: [saved.category as any],
+      minutes: saved.prepTime + saved.cookTime,
+      servings: saved.servings,
+      difficulty: saved.difficulty,
+      rating: 0,
+      ratingCount: 0,
+      note: 'A recipe from the Cook & Flame community.',
+      contributor: 'Community cook',
+      image: '/images/recipe-placeholder.jpg',
+      imageAlt: saved.title,
+      ingredients: saved.ingredients,
+      steps: saved.instructions,
+      tip: 'Adjust seasoning and cooking time to your ingredients and equipment.',
+      tags: [saved.category, saved.cuisine.toLowerCase()],
+      macros: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+    }) : null)
     if (!recipe) throw notFound()
 
-    const [session, stats] = await Promise.all([
-      getSession().catch(() => ({ user: null, profile: null })),
+    const [session, stats, favs] = await Promise.all([
+      sessionPromise,
       getStats().catch(() => ({ stats: null, ratings: {} })),
+      getFavorites().catch(() => ({ favorites: [] })),
     ])
 
     return {
@@ -25,13 +49,15 @@ export const Route = createFileRoute('/recipes/$slug')({
       signedIn: Boolean(session.user),
       myRating: session.profile?.ratings?.[params.slug],
       ratings: stats.ratings as Record<string, { avg: number; n: number }>,
+      isFavorite: favs.favorites.includes(params.slug),
     }
   },
   component: RecipeDetail,
 })
 
 function RecipeDetail() {
-  const { recipe, signedIn, myRating, ratings } = Route.useLoaderData()
+  const { recipe, signedIn, myRating, ratings, isFavorite: initialFavorite } = Route.useLoaderData()
+  const [isFavorite, setIsFavorite] = useState(initialFavorite)
   const live = ratings[recipe.slug]
   const stars = live?.n ? live.avg : recipe.rating
 
@@ -201,6 +227,17 @@ function RecipeDetail() {
           </div>
 
           <aside className="lg:sticky lg:top-24 lg:self-start">
+            {signedIn ? (
+              <button
+                className="btn btn-ghost w-full"
+                onClick={async () => {
+                  const result = await favoriteRecipe({ data: { recipeSlug: recipe.slug } })
+                  if ('saved' in result && typeof result.saved === 'boolean') setIsFavorite(result.saved)
+                }}
+              >
+                {isFavorite ? '♥ Saved to favorites' : '♡ Save to favorites'}
+              </button>
+            ) : null}
             <CookedItButton
               recipeSlug={recipe.slug}
               signedIn={signedIn}

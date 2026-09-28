@@ -1,12 +1,68 @@
-import { Link } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { Heart, Plus } from 'lucide-react'
-import { getMyKitchen } from '../server/kitchen.functions'
+import { getFavorites, getMyKitchen, getMyRecipes } from '../server/kitchen.functions'
 
-export default function Profile(){
- const [session,setSession]=useState<any>(null);const [favorites,setFavorites]=useState<string[]>([])
- useEffect(()=>{getMyKitchen().then(setSession);setFavorites(JSON.parse(localStorage.getItem('cookr-favorites')||'[]'))},[])
- if(!session)return <main className="mx-auto max-w-5xl px-4 py-12"><h1 className="font-display text-3xl font-black">Your kitchen</h1><p className="mt-2 text-ink-soft">Sign in to see your cooking progress.</p><Link className="btn btn-primary mt-5 inline-flex" to="/login">Sign in</Link></main>
- const {user,profile}=session
- return <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6"><div className="flex flex-wrap items-start justify-between gap-5 border-b border-paper-3 pb-8"><div><p className="eyebrow">Cook & Flame</p><h1 className="mt-2 font-display text-4xl font-black">{user.displayName}</h1><p className="mt-1 text-ink-soft">{user.email}</p></div><Link className="btn btn-primary" to="/add"><Plus size={16}/> Add recipe</Link></div><div className="grid gap-4 py-8 sm:grid-cols-4">{[['XP',profile.xp],['Cooks',profile.totalCooks],['Recipes',profile.distinctRecipes],['Streak',profile.streak+'d']].map(([label,value])=><div className="border border-paper-3 p-5" key={String(label)}><p className="text-xs font-bold uppercase tracking-widest text-ink-faint">{label}</p><p className="mt-2 font-display text-3xl font-black">{value}</p></div>)}</div><div className="grid gap-8 md:grid-cols-2"><section><h2 className="font-display text-2xl font-bold">Your level</h2><p className="mt-2 text-ember font-bold">{profile.level.name}</p><p className="mt-1 text-sm text-ink-soft">{profile.xp} XP</p><h3 className="mt-7 font-bold">Recent cooks</h3><div className="mt-3 space-y-2">{profile.recent.map((r:any)=><Link key={r.slug+r.cookedOn} to="/recipes/$slug" params={{slug:r.slug}} className="block border border-paper-3 p-3 hover:bg-paper-2"><span className="font-semibold">{r.title}</span><span className="ml-2 text-xs text-ink-faint">{r.cookedOn}</span></Link>)}</div></section><section><h2 className="font-display text-2xl font-bold">Favorites</h2><p className="mt-2 text-sm text-ink-soft">{favorites.length} saved recipe{favorites.length===1?'':'s'}</p><div className="mt-4 flex items-center gap-2 text-ink-soft"><Heart size={18}/> Favorite recipes are kept in this browser.</div></section></div></main>
+export default function Profile() {
+  const [session, setSession] = useState<any>(null)
+  const [favorites, setFavorites] = useState<string[]>([])
+  const [myRecipes, setMyRecipes] = useState<any[]>([])
+
+  useEffect(() => {
+    Promise.all([getMyKitchen(), getFavorites(), getMyRecipes()]).then(([kitchen, favs, mine]) => {
+      setSession(kitchen)
+      setFavorites(favs.favorites)
+      setMyRecipes(mine.recipes)
+    })
+  }, [])
+
+  if (!session) return <main className="mx-auto max-w-5xl px-4 py-12"><h1 className="font-display text-3xl font-black">Your kitchen</h1><p className="mt-2 text-ink-soft">Sign in to see your cooking progress.</p><Link className="btn btn-primary mt-5 inline-flex" to="/login">Sign in</Link></main>
+
+  const { user, profile } = session
+  return (
+    <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+      <div className="flex flex-wrap items-start justify-between gap-5 border-b border-paper-3 pb-8">
+        <div><p className="eyebrow">Cook &amp; Flame</p><h1 className="mt-2 font-display text-4xl font-black">{user.displayName}</h1><p className="mt-1 text-ink-soft">{user.email}</p></div>
+        <Link className="btn btn-primary" to="/add"><Plus size={16}/> Add recipe</Link>
+      </div>
+
+      <div className="grid gap-4 py-8 sm:grid-cols-4">
+        {[['XP', profile.xp], ['Cooks', profile.totalCooks], ['Recipes', profile.distinctRecipes], ['Streak', profile.streak + 'd']].map(([label, value]) =>
+          <div className="border border-paper-3 p-5" key={String(label)}><p className="text-xs font-bold uppercase tracking-widest text-ink-faint">{label}</p><p className="mt-2 font-display text-3xl font-black">{value}</p></div>
+        )}
+      </div>
+
+      <div className="grid gap-10 md:grid-cols-2">
+        <section>
+          <h2 className="font-display text-2xl font-bold">Your recipes</h2>
+          <div className="mt-4 space-y-2">
+            {myRecipes.length ? myRecipes.map(recipe =>
+              <div key={recipe.slug} className="border border-paper-3 p-4">
+                <h3 className="font-bold">{recipe.title}</h3>
+                <p className="mt-1 text-sm text-ink-soft">{recipe.cuisine} · {recipe.difficulty} · {recipe.prepTime + recipe.cookTime} min</p>
+                <Link className="mt-3 inline-block text-sm font-bold text-ember" to="/recipes/$slug" params={{ slug: recipe.slug }}>Open recipe →</Link>
+              </div>
+            ) : <p className="text-sm text-ink-soft">You haven't created a recipe yet.</p>}
+          </div>
+        </section>
+
+        <section>
+          <h2 className="font-display text-2xl font-bold">Favorites</h2>
+          <p className="mt-2 text-sm text-ink-soft">{favorites.length} saved recipe{favorites.length === 1 ? '' : 's'}</p>
+          <div className="mt-4 space-y-2">
+            {favorites.length ? favorites.map(slug =>
+              <Link key={slug} to="/recipes/$slug" params={{ slug }} className="flex items-center gap-2 border border-paper-3 p-3 hover:bg-paper-2"><Heart size={16} /> <span className="font-semibold">{slug}</span></Link>
+            ) : <p className="flex items-center gap-2 text-sm text-ink-soft"><Heart size={18}/> No favorites yet.</p>}
+          </div>
+        </section>
+
+        <section className="md:col-span-2">
+          <h2 className="font-display text-2xl font-bold">Recent cooks</h2>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {profile.recent.map((r: any) => <Link key={r.slug + r.cookedOn} to="/recipes/$slug" params={{ slug: r.slug }} className="block border border-paper-3 p-3 hover:bg-paper-2"><span className="font-semibold">{r.title}</span><span className="ml-2 text-xs text-ink-faint">{r.cookedOn}</span></Link>)}
+          </div>
+        </section>
+      </div>
+    </main>
+  )
 }
