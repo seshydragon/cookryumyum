@@ -22,13 +22,13 @@ import {
   timeOfDayCounts,
 } from '../data/recipes'
 import { img } from '../lib/img'
-import { getStats } from '../server/kitchen.functions'
+import { getShelfRecipes, getStats } from '../server/kitchen.functions'
 
 export const Route = createFileRoute('/')({
   loader: async () => {
     try {
-      const { stats, ratings } = await getStats()
-      return { stats, ratings }
+      const [{ stats, ratings }, { recipes: shelfRecipes }] = await Promise.all([getStats(), getShelfRecipes()])
+      return { stats, ratings, shelfRecipes }
     } catch {
       return {
         stats: {
@@ -47,12 +47,12 @@ export const Route = createFileRoute('/')({
 })
 
 function Home() {
-  const { stats, ratings } = Route.useLoaderData()
+  const { stats, ratings, shelfRecipes } = Route.useLoaderData()
   const challenge = activeChallenge()
   const byCuisine = new Map(cuisineCounts())
   const byTime = new Map(timeOfDayCounts())
 
-  const featured = [...recipes]
+  const featured = [...shelfRecipes]
     .sort((a, b) => {
       const ra = ratings[a.slug]?.n ? ratings[a.slug].avg : a.rating
       const rb = ratings[b.slug]?.n ? ratings[b.slug].avg : b.rating
@@ -60,7 +60,7 @@ function Home() {
     })
     .slice(0, 6)
 
-  const quick = recipes.filter((r) => r.minutes <= 25).slice(0, 3)
+  const quick = shelfRecipes.filter((r) => r.minutes <= 25).slice(0, 3)
 
   return (
     <div>
