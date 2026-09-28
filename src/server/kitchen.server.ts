@@ -16,6 +16,7 @@ import {
   entryVotes,
   recipeRatings,
   users,
+  userRecipes,
   xpEvents,
 } from '../../db/schema'
 import { getRecipe, recipes } from '../data/recipes'
@@ -268,7 +269,7 @@ export async function communityStats() {
   ])
 
   return {
-    recipes: recipes.length,
+    recipes: recipes.length + Number((await db.select({ n: count(userRecipes.id) }).from(userRecipes))[0]?.n ?? 0),
     cooks: Number(cooks?.n ?? 0),
     mealsCooked: Number(cooked?.n ?? 0),
     challengeEntries: Number(entries?.n ?? 0),
