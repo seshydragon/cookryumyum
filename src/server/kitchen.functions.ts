@@ -23,6 +23,7 @@ import {
   voteForEntry,
 } from './kitchen.server'
 import { activeChallenge, previousChallenge } from '../data/challenges'
+import { addMealPlanItem, clearMealPlan, createUserRecipe, getMealPlan, getMyFavorites, listMyRecipes, removeMealPlanItem, toggleFavorite } from './recipes.server'
 
 /* ---------------------------------------------------------------- session -- */
 
@@ -146,4 +147,76 @@ export const getBoards = createServerFn({ method: 'GET' }).handler(async () => {
   const user = await currentUser()
   const boards = await getLeaderboards()
   return { ...boards, viewerId: user?.id ?? null }
+})
+
+
+/* --------------------------------------------------------- personal recipes -- */
+
+export const createRecipe = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    title: z.string().min(2).max(160),
+    description: z.string().max(1000),
+    category: z.string().min(1).max(40),
+    cuisine: z.string().min(1).max(60),
+    difficulty: z.string().min(1).max(20),
+    servings: z.number().int().min(1).max(100),
+    prepTime: z.number().int().min(0).max(1440),
+    cookTime: z.number().int().min(0).max(1440),
+    ingredients: z.array(z.string()).max(100),
+    instructions: z.array(z.string()).max(100),
+  }))
+  .handler(async ({ data }) => {
+    const user = await currentUser()
+    if (!user) return { error: 'Sign in to save your recipe.' }
+    return createUserRecipe(user.id, data)
+  })
+
+export const getMyRecipes = createServerFn({ method: 'GET' }).handler(async () => {
+  const user = await currentUser()
+  if (!user) return { recipes: [] }
+  return { recipes: await listMyRecipes(user.id) }
+})
+
+export const getFavorites = createServerFn({ method: 'GET' }).handler(async () => {
+  const user = await currentUser()
+  if (!user) return { favorites: [] }
+  return { favorites: await getMyFavorites(user.id) }
+})
+
+export const favoriteRecipe = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ recipeSlug: z.string().min(1).max(160) }))
+  .handler(async ({ data }) => {
+    const user = await currentUser()
+    if (!user) return { error: 'Sign in to save favorites.' }
+    return toggleFavorite(user.id, data.recipeSlug)
+  })
+
+/* ----------------------------------------------------------- meal planner -- */
+
+export const getMyMealPlan = createServerFn({ method: 'GET' }).handler(async () => {
+  const user = await currentUser()
+  if (!user) return { plan: null }
+  return { plan: await getMealPlan(user.id) }
+})
+
+export const addToMealPlan = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ day: z.string(), recipeSlug: z.string().min(1).max(160) }))
+  .handler(async ({ data }) => {
+    const user = await currentUser()
+    if (!user) return { error: 'Sign in to save a meal plan.' }
+    return addMealPlanItem(user.id, data.day, data.recipeSlug)
+  })
+
+export const removeFromMealPlan = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ id: z.number().int().positive() }))
+  .handler(async ({ data }) => {
+    const user = await currentUser()
+    if (!user) return { error: 'Sign in to edit your meal plan.' }
+    return removeMealPlanItem(user.id, data.id)
+  })
+
+export const clearMyMealPlan = createServerFn({ method: 'POST' }).handler(async () => {
+  const user = await currentUser()
+  if (!user) return { error: 'Sign in to clear your meal plan.' }
+  return clearMealPlan(user.id)
 })
