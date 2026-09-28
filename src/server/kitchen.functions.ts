@@ -23,6 +23,7 @@ import {
   voteForEntry,
 } from './kitchen.server'
 import { activeChallenge, previousChallenge } from '../data/challenges'
+import { askDragy } from './dragy.server'
 import { addMealPlanItem, clearMealPlan, createUserRecipe, getMealPlan, getMyFavorites, getShelfRecipe, getUserRecipe, listAllShelfRecipes, listMyRecipes, removeMealPlanItem, toggleFavorite } from './recipes.server'
 
 /* ---------------------------------------------------------------- session -- */
@@ -234,3 +235,8 @@ export const getShelfRecipes = createServerFn({ method: 'GET' }).handler(async (
 export const getUnifiedRecipe = createServerFn({ method: 'GET' })
   .inputValidator(z.object({ slug: z.string().min(1).max(160) }))
   .handler(async ({ data }) => getShelfRecipe(data.slug))
+
+
+export const chatWithDragy = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ messages: z.array(z.object({ role: z.enum(['user', 'assistant']), text: z.string().min(1).max(4000) })).min(1).max(20) }))
+  .handler(async ({ data }) => askDragy(data.messages))
