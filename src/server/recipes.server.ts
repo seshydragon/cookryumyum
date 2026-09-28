@@ -1,6 +1,7 @@
 import { and, desc, eq } from 'drizzle-orm'
 import { db } from '../../db'
 import { mealPlanItems, recipeFavorites, userRecipes } from '../../db/schema'
+import { recipes as builtInRecipes, type Recipe as ShelfRecipe } from '../data/recipes'
 
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
 
@@ -58,6 +59,62 @@ export async function getUserRecipe(slug: string) {
     userId: userRecipes.userId,
   }).from(userRecipes).where(eq(userRecipes.slug, slug))
   return recipe ?? null
+}
+
+function toShelfRecipe(recipe: Awaited<ReturnType<typeof getUserRecipe>>): ShelfRecipe | null {
+  if (!recipe) return null
+  const timeOfDay = ['breakfast', 'brunch', 'lunch', 'dinner', 'snack', 'dessert', 'late-night']
+  const when = timeOfDay.includes(recipe.category.toLowerCase())
+    ? [recipe.category.toLowerCase()]
+    : ['dinner']
+  const difficulty = recipe.difficulty === 'hard' ? 'involved' : recipe.difficulty === 'medium' ? 'medium' : 'easy'
+  return {
+    slug: recipe.slug,
+    title: recipe.title,
+    cuisine: recipe.cuisine as ShelfRecipe['cuisine'],
+    timeOfDay: when as ShelfRecipe['timeOfDay'],
+    minutes: recipe.prepTime + recipe.cookTime,
+    difficulty,
+    servings: recipe.servings,
+    blurb: recipe.description || 'A recipe from the Cook & Flame community.',
+    note: 'Created by a Cook & Flame community cook.',
+    image: '/img/hero-kitchen.jpg',
+    imageAlt: 'Cook & Flame community recipe',
+    tags: [recipe.category, recipe.difficulty].filter(Boolean),
+    macros: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+    ingredients: recipe.ingredients,
+    steps: recipe.instructions,
+    tip: 'Add your own notes after cooking.',
+    contributor: 'Community cook',
+    rating: 0,
+    ratingCount: 0,
+  }
+}
+
+export async function listAllShelfRecipes() {
+  const rows = await db.select({
+    slug: userRecipes.slug,
+    title: userRecipes.title,
+    description: userRecipes.description,
+    category: userRecipes.category,
+    cuisine: userRecipes.cuisine,
+    difficulty: userRecipes.difficulty,
+    servings: userRecipes.servings,
+    prepTime: userRecipes.prepTime,
+    cookTime: userRecipes.cookTime,
+    ingredients: userRecipes.ingredients,
+    instructions: userRecipes.instructions,
+    userId: userRecipes.userId,
+  }).from(userRecipes).orderBy(desc(userRecipes.createdAt))
+
+  const community = rows.map(toShelfRecipe).filter((r): r is ShelfRecipe => Boolean(r))
+  return [...builtInRecipes, ...community]
+}
+
+export async function getShelfRecipe(slug: string) {
+  const builtIn = builtInRecipes.find((r) => r.slug === slug)
+  if (builtIn) return builtIn
+  return toShelfRecipe(await getUserRecipe(slug))
 }
 
 export async function listMyRecipes(userId: number) {
