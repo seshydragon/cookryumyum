@@ -1,0 +1,8 @@
+# Local development only. Never commit real secrets.
+DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@YOUR_SUPABASE_HOST:5432/postgres?sslmode=require
+SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
+SUPABASE_STORAGE_BUCKET=challenge-photos
+Api_key=YOUR_NARA_API_KEY
+NARA_MODEL=deepseek-v4-flash
+NARA_VISION_MODEL=deepseek-v4-flash-vision-exp
