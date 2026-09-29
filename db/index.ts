@@ -1,4 +1,17 @@
-import { drizzle } from 'drizzle-orm/netlify-db'
+import { drizzle } from 'drizzle-orm/postgres-js'
+import postgres from 'postgres'
 import * as schema from './schema'
 
-export const db = drizzle({ schema })
+const connectionString = process.env.DATABASE_URL
+
+if (!connectionString) {
+  throw new Error('DATABASE_URL is required. Add your Supabase Postgres connection string to the server environment.')
+}
+
+// Supabase Transaction Pooler does not support prepared statements.
+const client = postgres(connectionString, {
+  prepare: false,
+  max: 1,
+})
+
+export const db = drizzle({ client, schema })
