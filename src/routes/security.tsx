@@ -100,7 +100,7 @@ function Security() {
           <Link to="/signup" className="btn btn-primary">
             Start a kitchen
           </Link>
-          <Link to="/recipes" className="btn btn-ghost">
+          <Link to="/recipes" search={{ cuisine: [], when: [], tag: [], q: '', sort: 'top', max: undefined }} className="btn btn-ghost">
             Browse the shelf
           </Link>
         </div>
