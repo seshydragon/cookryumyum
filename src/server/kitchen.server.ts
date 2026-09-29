@@ -24,7 +24,6 @@ import { BADGES, XP, levelFor } from '../data/progress'
 import { activeChallenge, challengeWindow } from '../data/challenges'
 import { getShelfRecipe } from './recipes.server'
 
-const PHOTO_STORE = 'challenge-photos'
 const MAX_PHOTO_BYTES = 6 * 1024 * 1024
 
 const today = () => new Date().toISOString().slice(0, 10)
