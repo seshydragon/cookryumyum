@@ -82,7 +82,7 @@ function Home() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/recipes" className="btn btn-primary">
+              <Link to="/recipes" search={{ cuisine: [], when: [], tag: [], q: '', sort: 'top', max: undefined }} className="btn btn-primary">
                 <Search size={16} /> Open the shelf
               </Link>
               <Link to="/challenges" className="btn btn-ink">
@@ -359,7 +359,7 @@ function Home() {
             </div>
             <Link
               to="/recipes"
-              search={{ max: 30, sort: 'quick' }}
+              search={{ cuisine: [], when: [], tag: [], q: '', max: 30, sort: 'quick' }}
               className="flex items-center gap-1.5 text-sm font-bold text-ember hover:underline"
             >
               Everything under 30 minutes <ArrowRight size={15} />
