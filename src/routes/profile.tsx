@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { Heart, Plus } from 'lucide-react'
 import { getFavorites, getMyKitchen, getMyRecipes } from '../server/kitchen.functions'
 
-export default function Profile() {
+export const Route = createFileRoute('/profile')({ component: Profile })
+
+function Profile() {
   const [session, setSession] = useState<any>(null)
   const [favorites, setFavorites] = useState<string[]>([])
   const [myRecipes, setMyRecipes] = useState<any[]>([])
