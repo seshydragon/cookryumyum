@@ -6,7 +6,7 @@
  * a level is derived from that total rather than stored, so the thresholds in
  * `src/data/progress.ts` can be retuned without a migration.
  */
-import { getStore } from '@netlify/blobs'
+import { deletePrivateObject, downloadPrivateObject, uploadPrivateObject } from './storage.server'
 import { and, count, desc, eq, inArray, sql } from 'drizzle-orm'
 import { db } from '../../db'
 import {
@@ -382,8 +382,7 @@ export async function submitChallengeEntry(input: {
     )
 
   const key = `${input.challengeSlug}/${input.userId}-${Date.now()}`
-  const store = getStore(PHOTO_STORE)
-  await store.set(key, bytes, { metadata: { contentType: input.photo.contentType } })
+  await uploadPrivateObject(key, bytes, input.photo.contentType)
 
   const caption = input.caption.trim().slice(0, 280)
 
@@ -393,7 +392,7 @@ export async function submitChallengeEntry(input: {
       .update(challengeEntries)
       .set({ photoKey: key, caption, recipeSlug: input.recipeSlug })
       .where(eq(challengeEntries.id, existing[0].id))
-    await store.delete(existing[0].photoKey).catch(() => {})
+    await deletePrivateObject(existing[0].photoKey).catch(() => {})
     await evaluateBadges(input.userId)
     return { entryId: existing[0].id, replaced: true }
   }
@@ -416,13 +415,9 @@ export async function submitChallengeEntry(input: {
 }
 
 export async function readChallengePhoto(key: string) {
-  const store = getStore(PHOTO_STORE)
-  const result = await store.getWithMetadata(key, { type: 'arrayBuffer' })
+  const result = await downloadPrivateObject(key)
   if (!result) return null
-  return {
-    body: result.data,
-    contentType: (result.metadata?.contentType as string) ?? 'image/jpeg',
-  }
+  return result
 }
 
 export async function listChallengeEntries(challengeSlug: string, viewerId: number | null) {
