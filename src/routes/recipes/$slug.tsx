@@ -64,6 +64,7 @@ function RecipeDetail() {
           <div className="flex flex-col justify-center py-10 lg:py-16 lg:pr-12">
             <Link
               to="/recipes"
+              search={{ cuisine: [], when: [], tag: [], q: '', sort: 'top', max: undefined }}
               className="eyebrow mb-5 flex items-center gap-1.5 hover:text-ember"
             >
               <ArrowLeft size={13} /> The shelf
