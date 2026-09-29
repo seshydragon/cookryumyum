@@ -203,3 +203,29 @@ export const mealPlanItems = pgTable(
     index('meal_plan_items_user_day_idx').on(t.userId, t.day),
   ],
 )
+
+/** AI- or recipe-based nutrition entries saved to a cook's daily log. */
+export const macroLogs = pgTable(
+  'macro_logs',
+  {
+    id: serial().primaryKey(),
+    userId: integer('user_id').notNull().references(() => users.id),
+    loggedOn: date('logged_on').notNull(),
+    title: text().notNull(),
+    calories: integer().notNull().default(0),
+    protein: integer().notNull().default(0),
+    carbs: integer().notNull().default(0),
+    fat: integer().notNull().default(0),
+    items: jsonb().$type<Array<{
+      name: string
+      calories: number
+      protein: number
+      carbs: number
+      fat: number
+    }>>().notNull().default([]),
+    notes: text().notNull().default(''),
+    source: text().notNull().default('photo'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => [index('macro_logs_user_date_idx').on(t.userId, t.loggedOn, t.createdAt)],
+)
