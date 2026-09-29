@@ -24,6 +24,7 @@ import {
 } from './kitchen.server'
 import { activeChallenge, previousChallenge } from '../data/challenges'
 import { askDragy } from './dragy.server'
+import { analyzeMacroPhoto, clearMacroLog, deleteMacroEntry, getMacroLog, saveMacroEntry } from './macro.server'
 import { addMealPlanItem, clearMealPlan, createUserRecipe, getMealPlan, getMyFavorites, getShelfRecipe, getUserRecipe, listAllShelfRecipes, listMyRecipes, removeMealPlanItem, toggleFavorite } from './recipes.server'
 
 /* ---------------------------------------------------------------- session -- */
@@ -240,3 +241,63 @@ export const getUnifiedRecipe = createServerFn({ method: 'GET' })
 export const chatWithDragy = createServerFn({ method: 'POST' })
   .inputValidator(z.object({ messages: z.array(z.object({ role: z.enum(['user', 'assistant']), text: z.string().min(1).max(4000) })).min(1).max(20) }))
   .handler(async ({ data }) => askDragy(data.messages))
+
+
+/* ------------------------------------------------------------- macro tracker -- */
+
+const loggedOnSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a valid calendar date.')
+
+export const analyzeMealPhoto = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    data: z.string().min(1).max(9_000_000),
+    contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+  }))
+  .handler(async ({ data }) => analyzeMacroPhoto(data))
+
+export const getMyMacroLog = createServerFn({ method: 'GET' })
+  .inputValidator(z.object({ loggedOn: loggedOnSchema }))
+  .handler(async ({ data }) => {
+    const user = await currentUser()
+    if (!user) return { entries: [] }
+    return { entries: await getMacroLog(user.id, data.loggedOn) }
+  })
+
+export const saveMacroLog = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    loggedOn: loggedOnSchema,
+    title: z.string().min(1).max(160),
+    calories: z.number().finite().min(0).max(15000),
+    protein: z.number().finite().min(0).max(1500),
+    carbs: z.number().finite().min(0).max(1500),
+    fat: z.number().finite().min(0).max(1500),
+    items: z.array(z.object({
+      name: z.string().min(1).max(120),
+      calories: z.number().finite().min(0).max(5000),
+      protein: z.number().finite().min(0).max(500),
+      carbs: z.number().finite().min(0).max(500),
+      fat: z.number().finite().min(0).max(500),
+    })).max(30).optional(),
+    notes: z.array(z.string().max(280)).max(8).optional(),
+    source: z.enum(['photo', 'recipe']).optional(),
+  }))
+  .handler(async ({ data }) => {
+    const user = await currentUser()
+    if (!user) return { error: 'Sign in to save nutrition entries.' }
+    return saveMacroEntry(user.id, data)
+  })
+
+export const deleteMyMacroLog = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ id: z.number().int().positive() }))
+  .handler(async ({ data }) => {
+    const user = await currentUser()
+    if (!user) return { error: 'Sign in to edit your nutrition log.' }
+    return deleteMacroEntry(user.id, data.id)
+  })
+
+export const clearMyMacroLog = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ loggedOn: loggedOnSchema }))
+  .handler(async ({ data }) => {
+    const user = await currentUser()
+    if (!user) return { error: 'Sign in to clear your nutrition log.' }
+    return clearMacroLog(user.id, data.loggedOn)
+  })
