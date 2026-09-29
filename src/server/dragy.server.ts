@@ -2,7 +2,7 @@ import { listAllShelfRecipes } from './recipes.server'
 
 type ChatMessage = { role: 'user' | 'assistant'; text: string }
 
-const NARA_MODEL = process.env.NARA_MODEL || 'auto/bynara'
+const NARA_MODEL = process.env.NARA_MODEL || 'deepseek-v4-flash'
 
 function getApiKey() {
   // Keep compatibility with the exact Netlify variable name the app is
