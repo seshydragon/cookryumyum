@@ -27,7 +27,7 @@ export const Route = createFileRoute('/recipes/$slug')({
       signedIn: Boolean(session.user),
       myRating: session.profile?.ratings?.[params.slug],
       ratings: stats.ratings as Record<string, { avg: number; n: number }>,
-      isFavorite: favs.favorites.includes(params.slug),
+      isFavorite: (favs.favorites as string[]).includes(params.slug),
     }
   },
   component: RecipeDetail,
