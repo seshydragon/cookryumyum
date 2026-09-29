@@ -181,7 +181,7 @@ export const getMyRecipes = createServerFn({ method: 'GET' }).handler(async () =
 
 export const getFavorites = createServerFn({ method: 'GET' }).handler(async () => {
   const user = await currentUser()
-  if (!user) return { favorites: [] }
+  if (!user) return { favorites: [] as string[] }
   return { favorites: await getMyFavorites(user.id) }
 })
 
