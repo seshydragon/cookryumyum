@@ -27,7 +27,7 @@ export const Route = createFileRoute('/recipes/$slug')({
       signedIn: Boolean(session.user),
       myRating: session.profile?.ratings?.[params.slug],
       ratings: stats.ratings as Record<string, { avg: number; n: number }>,
-      isFavorite: favs.favorites.includes(params.slug),
+      isFavorite: (favs.favorites as string[]).includes(params.slug),
     }
   },
   component: RecipeDetail,
@@ -64,6 +64,7 @@ function RecipeDetail() {
           <div className="flex flex-col justify-center py-10 lg:py-16 lg:pr-12">
             <Link
               to="/recipes"
+              search={{ cuisine: [], when: [], tag: [], q: '', sort: 'top', max: undefined }}
               className="eyebrow mb-5 flex items-center gap-1.5 hover:text-ember"
             >
               <ArrowLeft size={13} /> The shelf

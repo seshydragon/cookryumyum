@@ -223,7 +223,7 @@ function Kitchen() {
                 <li key={cuisine}>
                   <Link
                     to="/recipes"
-                    search={{ cuisine: [cuisine] }}
+                    search={{ cuisine: [cuisine], when: [], tag: [], q: '', sort: 'top', max: undefined }}
                     className="chip"
                     style={
                       tried.has(cuisine)

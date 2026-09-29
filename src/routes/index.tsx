@@ -40,6 +40,7 @@ export const Route = createFileRoute('/')({
           ratings: 0,
         },
         ratings: {} as Record<string, { avg: number; n: number }>,
+        shelfRecipes: recipes,
       }
     }
   },
@@ -81,7 +82,7 @@ function Home() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/recipes" className="btn btn-primary">
+              <Link to="/recipes" search={{ cuisine: [], when: [], tag: [], q: '', sort: 'top', max: undefined }} className="btn btn-primary">
                 <Search size={16} /> Open the shelf
               </Link>
               <Link to="/challenges" className="btn btn-ink">
@@ -141,7 +142,7 @@ function Home() {
               <ul className="flex flex-wrap gap-2">
                 {TIMES_OF_DAY.map((when) => (
                   <li key={when}>
-                    <Link to="/recipes" search={{ when: [when] }} className="chip">
+                    <Link to="/recipes" search={{ cuisine: [], when: [when], tag: [], q: '', sort: 'top', max: undefined }} className="chip">
                       {TIME_OF_DAY_LABELS[when]}
                       <span className="ml-1.5 text-ink-faint tabular-nums">
                         {byTime.get(when) ?? 0}
@@ -159,7 +160,7 @@ function Home() {
               <ul className="flex flex-wrap gap-2">
                 {CUISINES.map((cuisine) => (
                   <li key={cuisine}>
-                    <Link to="/recipes" search={{ cuisine: [cuisine] }} className="chip">
+                    <Link to="/recipes" search={{ cuisine: [cuisine], when: [], tag: [], q: '', sort: 'top', max: undefined }} className="chip">
                       {cuisine}
                       <span className="ml-1.5 text-ink-faint tabular-nums">
                         {byCuisine.get(cuisine) ?? 0}
@@ -184,6 +185,7 @@ function Home() {
           </div>
           <Link
             to="/recipes"
+            search={{ cuisine: [], when: [], tag: [], q: '', sort: 'top', max: undefined }}
             className="flex items-center gap-1.5 text-sm font-bold text-ember hover:underline"
           >
             All {stats.recipes} recipes <ArrowRight size={15} />
@@ -357,7 +359,7 @@ function Home() {
             </div>
             <Link
               to="/recipes"
-              search={{ max: 30, sort: 'quick' }}
+              search={{ cuisine: [], when: [], tag: [], q: '', max: 30, sort: 'quick' }}
               className="flex items-center gap-1.5 text-sm font-bold text-ember hover:underline"
             >
               Everything under 30 minutes <ArrowRight size={15} />
@@ -386,7 +388,7 @@ function Home() {
           <Link to="/signup" className="btn btn-primary">
             Start a kitchen
           </Link>
-          <Link to="/recipes" className="btn btn-ghost">
+          <Link to="/recipes" search={{ cuisine: [], when: [], tag: [], q: '', sort: 'top', max: undefined }} className="btn btn-ghost">
             Just show me the recipes
           </Link>
         </div>

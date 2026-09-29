@@ -59,7 +59,7 @@ function Leaderboard() {
             Boards fill up as people log what they cooked. Log one recipe and you are top of
             all four of these until someone else turns their oven on.
           </p>
-          <Link to="/recipes" className="btn btn-primary mt-6">
+          <Link to="/recipes" search={{ cuisine: [], when: [], tag: [], q: '', sort: 'top', max: undefined }} className="btn btn-primary mt-6">
             Find something to cook
           </Link>
         </div>

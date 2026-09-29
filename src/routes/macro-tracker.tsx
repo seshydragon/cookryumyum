@@ -150,8 +150,7 @@ function MacroTracker() {
 
     try {
       const result = await analyzeMealPhoto({
-        data: photo.data,
-        contentType: photo.contentType,
+        data: { data: photo.data, contentType: photo.contentType },
       })
 
       if ('error' in result && result.error) {
@@ -339,7 +338,7 @@ function MacroTracker() {
                 ].map(([label, value, unit]) => (
                   <div key={String(label)} className="border border-paper-3 p-2.5">
                     <p className="text-[0.6875rem] uppercase tracking-wide text-ink-faint">{label}</p>
-                    <p className="mt-1 font-bold">{value}{unit === 'kcal' ? ' kcal' : `g ${label.toLowerCase()}`}</p>
+                    <p className="mt-1 font-bold">{value}{unit === 'kcal' ? ' kcal' : `g ${String(label).toLowerCase()}`}</p>
                   </div>
                 ))}
               </div>

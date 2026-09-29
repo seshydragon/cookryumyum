@@ -207,7 +207,7 @@ function Challenges() {
                   </li>
                 ))}
               </ul>
-              <Link to="/recipes" className="btn btn-ghost mt-4 w-full py-2 text-sm">
+              <Link to="/recipes" search={{ cuisine: [], when: [], tag: [], q: '', sort: 'top', max: undefined }} className="btn btn-ghost mt-4 w-full py-2 text-sm">
                 Or search the whole shelf
               </Link>
             </div>

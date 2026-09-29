@@ -71,7 +71,7 @@ function NotFound() {
       <p className="mt-3 text-ink-soft">
         That page is not here. The recipes definitely are.
       </p>
-      <Link to="/recipes" className="btn btn-primary mt-6">
+      <Link to="/recipes" search={{ cuisine: [], when: [], tag: [], q: '', sort: 'top', max: undefined }} className="btn btn-primary mt-6">
         Back to the shelf
       </Link>
     </div>

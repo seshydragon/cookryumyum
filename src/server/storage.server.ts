@@ -17,7 +17,7 @@ export async function uploadPrivateObject(path: string, body: Uint8Array, conten
       'Content-Type': contentType,
       'x-upsert': 'false',
     },
-    body,
+    body: body as unknown as BodyInit,
   })
   if (!response.ok) throw new Error(`Supabase Storage upload failed: ${response.status}`)
 }
