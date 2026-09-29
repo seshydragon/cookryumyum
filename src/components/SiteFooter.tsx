@@ -19,7 +19,7 @@ export function SiteFooter() {
           <p className="eyebrow mb-3">Cook</p>
           <ul className="flex flex-col gap-2 text-sm">
             <li>
-              <Link to="/recipes" className="hover:text-ember">
+              <Link to="/recipes" search={{ cuisine: [], when: [], tag: [], q: '', sort: 'top', max: undefined }} className="hover:text-ember">
                 Recipe shelf
               </Link>
             </li>
